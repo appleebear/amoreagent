@@ -1558,6 +1558,7 @@ def generate(req: GenerateRequest):
         shorten_sys = (
             "너는 마케팅 카피를 글자수에 맞게 다듬는 편집자다.\n"
             "의미/톤은 유지하고, 반드시 JSON만 출력해라.\n"
+            "모든 의미를 유지하는 것보다, 톤을 유지하고 문장을 자연스럽게 하는 것이 더 중요하다.\n"
         )
         shorten_user = {
             "title": title,
