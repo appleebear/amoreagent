@@ -1,0 +1,10 @@
+#!/bin/sh
+'''exec' "/Users/harry/Library/CloudStorage/GoogleDrive-youtj2@gmail.com/내 드라이브/문서/서울대학교 MBA(2025~2026)/아모레 공모전/프로토타입 3/amoremall_rag_agent/.venv/bin/python3.12" "$0" "$@"
+' '''
+# -*- coding: utf-8 -*-
+import re
+import sys
+from websockets.cli import main
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())

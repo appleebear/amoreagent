@@ -1,0 +1,3344 @@
+{
+  "version": "2.0.0",
+  "strategy": "Optimal = Gate(Strong Context) + Full-Variable Scoring + Tie-breaker + CRM Routing",
+  "inputs_all_columns": [
+    "age_group",
+    "gender",
+    "skin_type",
+    "skin_tone",
+    "skin_concern_main",
+    "skin_concern_sub",
+    "skin_sensitivity",
+    "acne_prone",
+    "aging_stage",
+    "allergy_history",
+    "dermatologist_visit",
+    "category_focus",
+    "key_step",
+    "ingredient_preference",
+    "ingredient_avoid",
+    "texture_preference",
+    "scent_preference",
+    "value_orientation",
+    "price_sensitivity",
+    "luxury_orientation",
+    "trend_sensitivity",
+    "risk_attitude",
+    "ethical_value",
+    "sustainability",
+    "purchase_cycle",
+    "basket_composition",
+    "avg_items_per_order",
+    "aov_level",
+    "annual_revenue",
+    "discount_ratio",
+    "promo_sensitivity",
+    "preferred_benefit",
+    "review_dependency",
+    "info_search_type",
+    "last_message_channel",
+    "preferred_time",
+    "preferred_content",
+    "lifecycle_stage",
+    "last_active_days",
+    "last_message_response",
+    "customer_tier",
+    "nps_intent"
+  ],
+  "personas": {
+    "P-01": {
+      "name_ko": "성분 분석가",
+      "name_en": "The Ingredient Analyst"
+    },
+    "P-02": {
+      "name_ko": "SOS 트러블 슈터",
+      "name_en": "The Troubleshooter"
+    },
+    "P-03": {
+      "name_ko": "에코 액티비스트",
+      "name_en": "The Eco-Activist"
+    },
+    "P-04": {
+      "name_ko": "스마트 미니멀리스트",
+      "name_en": "The Minimalist"
+    },
+    "P-05": {
+      "name_ko": "가성비 해커",
+      "name_en": "The Value Hacker"
+    },
+    "P-06": {
+      "name_ko": "트렌드 헌터",
+      "name_en": "The Trend Hunter"
+    },
+    "P-07": {
+      "name_ko": "럭셔리 큐레이터",
+      "name_en": "The Luxury Curator"
+    },
+    "P-08": {
+      "name_ko": "감성 무드 탐험가",
+      "name_en": "The Mood Explorer"
+    },
+    "P-09": {
+      "name_ko": "기프팅 플래너",
+      "name_en": "The Gifting Planner"
+    }
+  },
+  "gates_strong_context": [
+    {
+      "persona_id": "P-09",
+      "priority": 1,
+      "when_all": [
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "목적"
+          ]
+        }
+      ],
+      "when_any": [
+        {
+          "field": "basket_composition",
+          "in": [
+            "세트"
+          ]
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "선물",
+            "기프트",
+            "포장",
+            "메시지"
+          ]
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "증정",
+            "샘플"
+          ]
+        }
+      ],
+      "note": "선물 맥락은 다른 성향보다 전환 논리가 달라 우선 확정"
+    },
+    {
+      "persona_id": "P-07",
+      "priority": 2,
+      "when_all": [
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Premium"
+          ]
+        }
+      ],
+      "when_any": [
+        {
+          "field": "customer_tier",
+          "in": [
+            "Gold",
+            "Platinum"
+          ]
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "High"
+          ]
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "비싼 것을 가끔 사는 사람"
+          ]
+        }
+      ],
+      "note": "프리미엄 지향 + 구매력 시그널이 강하면 럭셔리로 확정"
+    },
+    {
+      "persona_id": "P-06",
+      "priority": 3,
+      "when_all": [
+        {
+          "field": "trend_sensitivity",
+          "in": [
+            "High"
+          ]
+        }
+      ],
+      "when_any": [
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "신상알림",
+            "재입고알림"
+          ]
+        },
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "충동"
+          ]
+        }
+      ],
+      "note": "트렌드 High + 행동(충동/알림반응)이면 트렌드 우선"
+    }
+  ],
+  "scoring_model_full_variables": {
+    "missing_value_policy": "ignore",
+    "score_range_hint": {
+      "typical_min": 0,
+      "typical_max": 35
+    },
+    "weights_by_persona": {
+      "P-01": [
+        {
+          "field": "value_orientation",
+          "equals": "성분중심",
+          "score": 6
+        },
+        {
+          "field": "info_search_type",
+          "equals": "분석형",
+          "score": 5
+        },
+        {
+          "field": "review_dependency",
+          "equals": "High",
+          "score": 3
+        },
+        {
+          "field": "skin_sensitivity",
+          "equals": "High",
+          "score": 2
+        },
+        {
+          "field": "allergy_history",
+          "contains_any": [
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 3
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 2
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐"
+          ],
+          "score": 1
+        },
+        {
+          "field": "risk_attitude",
+          "equals": "보수",
+          "score": 2
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "30대",
+            "40대",
+            "50대",
+            "60대+"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "민감성",
+            "복합성"
+          ],
+          "score": 1
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "쿨",
+            "뉴트럴",
+            "웜"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "미백",
+            "수분",
+            "모공",
+            "주름·탄력"
+          ],
+          "score": 1
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 1
+        },
+        {
+          "field": "category_focus",
+          "equals": "스킨케어",
+          "score": 1
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "토너",
+            "세럼",
+            "크림"
+          ],
+          "score": 1
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻",
+            "촉촉"
+          ],
+          "score": 0
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향",
+            "은은"
+          ],
+          "score": 1
+        },
+        {
+          "field": "price_sensitivity",
+          "in": [
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Mass"
+          ],
+          "score": 1
+        },
+        {
+          "field": "trend_sensitivity",
+          "equals": "High",
+          "score": -2
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "정기"
+          ],
+          "score": 1
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "단품"
+          ],
+          "score": 1
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2"
+          ],
+          "score": 1
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "싼 것을 자주 사는 사람",
+            "비싼 것을 가끔 사는 사람"
+          ],
+          "score": 0
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            20
+          ],
+          "score": 1
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "샘플"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "이메일",
+            "앱푸시"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "19-21",
+            "22-24"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "리얼리뷰"
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Welcome",
+            "Active",
+            "VIP"
+          ],
+          "score": 0
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            14
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        },
+        {
+          "field": "nps_intent",
+          "equals": "Yes",
+          "score": 1
+        }
+      ],
+      "P-02": [
+        {
+          "field": "skin_concern_main",
+          "equals": "트러블",
+          "score": 6
+        },
+        {
+          "field": "acne_prone",
+          "equals": "Yes",
+          "score": 5
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 3
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐"
+          ],
+          "score": 3
+        },
+        {
+          "field": "risk_attitude",
+          "equals": "보수",
+          "score": 2
+        },
+        {
+          "field": "review_dependency",
+          "equals": "High",
+          "score": 2
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "향료",
+            "특정성분"
+          ],
+          "score": 2
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "지성",
+            "복합성",
+            "민감성"
+          ],
+          "score": 2
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질"
+          ],
+          "score": 2
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 1
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "클렌징"
+          ],
+          "score": 2
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "클렌징",
+            "토너",
+            "세럼"
+          ],
+          "score": 2
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 1
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻"
+          ],
+          "score": 1
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향"
+          ],
+          "score": 2
+        },
+        {
+          "field": "value_orientation",
+          "in": [
+            "성분중심"
+          ],
+          "score": 2
+        },
+        {
+          "field": "price_sensitivity",
+          "in": [
+            "Medium",
+            "Low"
+          ],
+          "score": 1
+        },
+        {
+          "field": "trend_sensitivity",
+          "equals": "High",
+          "score": -1
+        },
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "목적",
+            "정기"
+          ],
+          "score": 2
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "단품",
+            "묶음"
+          ],
+          "score": 1
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2"
+          ],
+          "score": 1
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 1
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            30
+          ],
+          "score": 1
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "샘플"
+          ],
+          "score": 1
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "분석형"
+          ],
+          "score": 2
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "리얼리뷰"
+          ],
+          "score": 2
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "앱푸시",
+            "알림톡"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "08-09",
+            "12-13",
+            "19-21"
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Welcome",
+            "Active"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            14
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        },
+        {
+          "field": "nps_intent",
+          "equals": "Yes",
+          "score": 1
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "10대",
+            "20대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "쿨",
+            "뉴트럴",
+            "웜"
+          ],
+          "score": 0
+        }
+      ],
+      "P-03": [
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리"
+          ],
+          "score": 8
+        },
+        {
+          "field": "sustainability",
+          "equals": "High",
+          "score": 5
+        },
+        {
+          "field": "ingredient_avoid",
+          "contains_any": [
+            "동물성",
+            "실험"
+          ],
+          "score": 3
+        },
+        {
+          "field": "value_orientation",
+          "in": [
+            "브랜드중심",
+            "성분중심"
+          ],
+          "score": 2
+        },
+        {
+          "field": "risk_attitude",
+          "in": [
+            "중립",
+            "보수"
+          ],
+          "score": 1
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "바디",
+            "헤어"
+          ],
+          "score": 1
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "묶음",
+            "세트"
+          ],
+          "score": 1
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "price_sensitivity",
+          "equals": "High",
+          "score": -1
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "분석형"
+          ],
+          "score": 1
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "리얼리뷰"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "이메일",
+            "앱푸시"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "19-21",
+            "22-24"
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Active",
+            "VIP"
+          ],
+          "score": 1
+        },
+        {
+          "field": "nps_intent",
+          "equals": "Yes",
+          "score": 2
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "20대",
+            "30대",
+            "40대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "민감성",
+            "건성",
+            "복합성",
+            "지성",
+            "수부지"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "수분",
+            "미백",
+            "주름·탄력",
+            "모공",
+            "트러블"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐",
+            "없음"
+          ],
+          "score": 0
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "클렌징",
+            "토너",
+            "세럼",
+            "크림",
+            "선케어"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻",
+            "촉촉",
+            "쫀쫀"
+          ],
+          "score": 0
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향",
+            "은은",
+            "강함"
+          ],
+          "score": 0
+        },
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Premium",
+            "Mass"
+          ],
+          "score": 0
+        },
+        {
+          "field": "trend_sensitivity",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "정기",
+            "충동",
+            "목적"
+          ],
+          "score": 0
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2",
+            "3+"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "싼 것을 자주 사는 사람",
+            "비싼 것을 가끔 사는 사람"
+          ],
+          "score": 0
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            100
+          ],
+          "score": 0
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "쿠폰",
+            "1+1",
+            "증정",
+            "샘플"
+          ],
+          "score": 0
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            90
+          ],
+          "score": 0
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click",
+            "Ignore"
+          ],
+          "score": 0
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        }
+      ],
+      "P-04": [
+        {
+          "field": "purchase_cycle",
+          "equals": "정기",
+          "score": 6
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "단품",
+            "묶음"
+          ],
+          "score": 2
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2"
+          ],
+          "score": 3
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 2
+        },
+        {
+          "field": "trend_sensitivity",
+          "equals": "High",
+          "score": -2
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "클렌징"
+          ],
+          "score": 2
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "클렌징",
+            "토너",
+            "세럼",
+            "크림"
+          ],
+          "score": 2
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 1
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻",
+            "촉촉"
+          ],
+          "score": 1
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향",
+            "은은"
+          ],
+          "score": 1
+        },
+        {
+          "field": "value_orientation",
+          "in": [
+            "가성비",
+            "성분중심"
+          ],
+          "score": 2
+        },
+        {
+          "field": "price_sensitivity",
+          "in": [
+            "Medium"
+          ],
+          "score": 2
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            30
+          ],
+          "score": 2
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "샘플",
+            "쿠폰"
+          ],
+          "score": 1
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "추천의존형"
+          ],
+          "score": 1
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "수분",
+            "모공",
+            "미백",
+            "주름·탄력"
+          ],
+          "score": 1
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화"
+          ],
+          "score": 1
+        },
+        {
+          "field": "dermatologist_visit",
+          "equals": "없음",
+          "score": 1
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 2
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "싼 것을 자주 사는 사람"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "앱푸시",
+            "알림톡"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "08-09",
+            "12-13",
+            "19-21"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "프로모션 알림"
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Welcome",
+            "Active"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            30
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "nps_intent",
+          "equals": "Yes",
+          "score": 1
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "30대",
+            "40대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "건성",
+            "복합성",
+            "수부지",
+            "지성"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 0
+        },
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Mass"
+          ],
+          "score": 0
+        },
+        {
+          "field": "risk_attitude",
+          "in": [
+            "보수",
+            "중립"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리",
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        }
+      ],
+      "P-05": [
+        {
+          "field": "price_sensitivity",
+          "equals": "High",
+          "score": 7
+        },
+        {
+          "field": "promo_sensitivity",
+          "equals": "High",
+          "score": 6
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "쿠폰",
+            "1+1"
+          ],
+          "score": 5
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            30,
+            100
+          ],
+          "score": 5
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "세트",
+            "묶음"
+          ],
+          "score": 3
+        },
+        {
+          "field": "aov_level",
+          "equals": "Low",
+          "score": 3
+        },
+        {
+          "field": "annual_revenue",
+          "equals": "싼 것을 자주 사는 사람",
+          "score": 3
+        },
+        {
+          "field": "value_orientation",
+          "equals": "가성비",
+          "score": 5
+        },
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "정기",
+            "충동"
+          ],
+          "score": 1
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "2",
+            "3+"
+          ],
+          "score": 2
+        },
+        {
+          "field": "trend_sensitivity",
+          "equals": "High",
+          "score": 1
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 1
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "추천의존형"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "앱푸시",
+            "알림톡",
+            "문자"
+          ],
+          "score": 2
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "08-09",
+            "12-13",
+            "19-21"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "프로모션 알림",
+            "재입고알림"
+          ],
+          "score": 2
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Click"
+          ],
+          "score": 2
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Welcome",
+            "Dormant"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            14,
+            90
+          ],
+          "score": 1
+        },
+        {
+          "field": "luxury_orientation",
+          "equals": "Premium",
+          "score": -3
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver"
+          ],
+          "score": 1
+        },
+        {
+          "field": "nps_intent",
+          "equals": "Yes",
+          "score": 1
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "20대",
+            "30대",
+            "40대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "건성",
+            "지성",
+            "복합성",
+            "수부지",
+            "민감성"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "수분",
+            "미백",
+            "모공",
+            "트러블",
+            "주름·탄력"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐",
+            "없음"
+          ],
+          "score": 0
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "메이크업",
+            "클렌징",
+            "바디",
+            "헤어"
+          ],
+          "score": 0
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "클렌징",
+            "토너",
+            "세럼",
+            "크림",
+            "선케어"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 0
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻",
+            "촉촉",
+            "쫀쫀"
+          ],
+          "score": 0
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향",
+            "은은",
+            "강함"
+          ],
+          "score": 0
+        },
+        {
+          "field": "risk_attitude",
+          "in": [
+            "보수",
+            "중립",
+            "실험적"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리",
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        }
+      ],
+      "P-06": [
+        {
+          "field": "trend_sensitivity",
+          "equals": "High",
+          "score": 8
+        },
+        {
+          "field": "purchase_cycle",
+          "equals": "충동",
+          "score": 4
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "신상알림",
+            "재입고알림",
+            "리얼리뷰"
+          ],
+          "score": 4
+        },
+        {
+          "field": "risk_attitude",
+          "equals": "실험적",
+          "score": 3
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 2
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "10대",
+            "20대",
+            "30대"
+          ],
+          "score": 2
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "2",
+            "3+"
+          ],
+          "score": 1
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "단품",
+            "묶음"
+          ],
+          "score": 1
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "증정",
+            "샘플"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "앱푸시",
+            "알림톡"
+          ],
+          "score": 2
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "12-13",
+            "19-21",
+            "22-24"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            14
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Welcome",
+            "Active"
+          ],
+          "score": 1
+        },
+        {
+          "field": "value_orientation",
+          "in": [
+            "브랜드중심"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "지성",
+            "복합성",
+            "수부지",
+            "건성",
+            "민감성"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "트러블",
+            "모공",
+            "수분",
+            "미백",
+            "주름·탄력"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐",
+            "없음"
+          ],
+          "score": 0
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "메이크업",
+            "스킨케어",
+            "클렌징",
+            "바디",
+            "헤어"
+          ],
+          "score": 0
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "선케어",
+            "세럼",
+            "크림",
+            "클렌징",
+            "토너"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 0
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻",
+            "촉촉",
+            "쫀쫀"
+          ],
+          "score": 0
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향",
+            "은은",
+            "강함"
+          ],
+          "score": 0
+        },
+        {
+          "field": "price_sensitivity",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Premium",
+            "Mass"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리",
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "분석형",
+            "추천의존형"
+          ],
+          "score": 0
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "싼 것을 자주 사는 사람",
+            "비싼 것을 가끔 사는 사람"
+          ],
+          "score": 0
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            100
+          ],
+          "score": 0
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        },
+        {
+          "field": "nps_intent",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        }
+      ],
+      "P-07": [
+        {
+          "field": "luxury_orientation",
+          "equals": "Premium",
+          "score": 8
+        },
+        {
+          "field": "aov_level",
+          "equals": "High",
+          "score": 4
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Gold",
+            "Platinum"
+          ],
+          "score": 4
+        },
+        {
+          "field": "annual_revenue",
+          "equals": "비싼 것을 가끔 사는 사람",
+          "score": 3
+        },
+        {
+          "field": "value_orientation",
+          "equals": "브랜드중심",
+          "score": 4
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "은은",
+            "강함"
+          ],
+          "score": 2
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "쫀쫀",
+            "촉촉"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "샘플",
+            "증정"
+          ],
+          "score": 1
+        },
+        {
+          "field": "price_sensitivity",
+          "equals": "High",
+          "score": -3
+        },
+        {
+          "field": "promo_sensitivity",
+          "equals": "High",
+          "score": -1
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            20
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "리얼리뷰"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "이메일",
+            "앱푸시"
+          ],
+          "score": 2
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "19-21",
+            "22-24"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "VIP",
+            "Active"
+          ],
+          "score": 2
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            30
+          ],
+          "score": 1
+        },
+        {
+          "field": "nps_intent",
+          "equals": "Yes",
+          "score": 2
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "30대",
+            "40대",
+            "50대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "주름·탄력",
+            "미백",
+            "수분"
+          ],
+          "score": 1
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 1
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "간헐",
+            "정기"
+          ],
+          "score": 1
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "바디"
+          ],
+          "score": 1
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "세럼",
+            "크림"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "건성",
+            "복합성",
+            "수부지",
+            "지성",
+            "민감성"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 0
+        },
+        {
+          "field": "trend_sensitivity",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "risk_attitude",
+          "in": [
+            "보수",
+            "중립",
+            "실험적"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리",
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "purchase_cycle",
+          "in": [
+            "정기",
+            "목적",
+            "충동"
+          ],
+          "score": 0
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "단품",
+            "세트",
+            "묶음"
+          ],
+          "score": 0
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2",
+            "3+"
+          ],
+          "score": 0
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "분석형",
+            "추천의존형"
+          ],
+          "score": 0
+        }
+      ],
+      "P-08": [
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "무드",
+            "분위기",
+            "감성"
+          ],
+          "score": 6
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "촉촉",
+            "쫀쫀"
+          ],
+          "score": 4
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "은은",
+            "강함"
+          ],
+          "score": 3
+        },
+        {
+          "field": "purchase_cycle",
+          "equals": "충동",
+          "score": 2
+        },
+        {
+          "field": "info_search_type",
+          "equals": "분석형",
+          "score": -2
+        },
+        {
+          "field": "trend_sensitivity",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 2
+        },
+        {
+          "field": "value_orientation",
+          "in": [
+            "브랜드중심"
+          ],
+          "score": 1
+        },
+        {
+          "field": "price_sensitivity",
+          "in": [
+            "Low",
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "바디",
+            "헤어"
+          ],
+          "score": 2
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "크림",
+            "세럼"
+          ],
+          "score": 1
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "Medium"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "앱푸시",
+            "문자"
+          ],
+          "score": 1
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "19-21",
+            "22-24"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            30
+          ],
+          "score": 1
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Active"
+          ],
+          "score": 1
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "20대",
+            "30대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "건성",
+            "복합성",
+            "수부지",
+            "민감성",
+            "지성"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "수분",
+            "미백",
+            "주름·탄력",
+            "모공",
+            "트러블"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐",
+            "없음"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 0
+        },
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Premium",
+            "Mass"
+          ],
+          "score": 0
+        },
+        {
+          "field": "risk_attitude",
+          "in": [
+            "보수",
+            "중립",
+            "실험적"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리",
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "basket_composition",
+          "in": [
+            "단품",
+            "묶음",
+            "세트"
+          ],
+          "score": 0
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2",
+            "3+"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "싼 것을 자주 사는 사람",
+            "비싼 것을 가끔 사는 사람"
+          ],
+          "score": 0
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            100
+          ],
+          "score": 0
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "쿠폰",
+            "1+1",
+            "증정",
+            "샘플"
+          ],
+          "score": 0
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        },
+        {
+          "field": "nps_intent",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        }
+      ],
+      "P-09": [
+        {
+          "field": "purchase_cycle",
+          "equals": "목적",
+          "score": 8
+        },
+        {
+          "field": "basket_composition",
+          "equals": "세트",
+          "score": 4
+        },
+        {
+          "field": "preferred_content",
+          "contains_any": [
+            "선물",
+            "기프트",
+            "포장",
+            "메시지"
+          ],
+          "score": 5
+        },
+        {
+          "field": "preferred_benefit",
+          "in": [
+            "증정",
+            "샘플"
+          ],
+          "score": 2
+        },
+        {
+          "field": "price_sensitivity",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 1
+        },
+        {
+          "field": "promo_sensitivity",
+          "in": [
+            "Medium",
+            "High"
+          ],
+          "score": 1
+        },
+        {
+          "field": "discount_ratio",
+          "range": [
+            0,
+            50
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_channel",
+          "in": [
+            "알림톡",
+            "문자",
+            "앱푸시"
+          ],
+          "score": 2
+        },
+        {
+          "field": "preferred_time",
+          "in": [
+            "12-13",
+            "19-21",
+            "22-24"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_message_response",
+          "in": [
+            "Open",
+            "Click"
+          ],
+          "score": 1
+        },
+        {
+          "field": "last_active_days",
+          "range": [
+            0,
+            30
+          ],
+          "score": 1
+        },
+        {
+          "field": "age_group",
+          "in": [
+            "20대",
+            "30대",
+            "40대",
+            "50대"
+          ],
+          "score": 1
+        },
+        {
+          "field": "gender",
+          "in": [
+            "Female",
+            "Male"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_type",
+          "in": [
+            "건성",
+            "지성",
+            "복합성",
+            "민감성",
+            "수부지"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_tone",
+          "in": [
+            "웜",
+            "쿨",
+            "뉴트럴"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_main",
+          "in": [
+            "수분",
+            "미백",
+            "주름·탄력",
+            "모공",
+            "트러블"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_concern_sub",
+          "in": [
+            "홍조",
+            "각질",
+            "다크서클"
+          ],
+          "score": 0
+        },
+        {
+          "field": "skin_sensitivity",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "acne_prone",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aging_stage",
+          "in": [
+            "초기노화",
+            "본격노화"
+          ],
+          "score": 0
+        },
+        {
+          "field": "allergy_history",
+          "in": [
+            "없음",
+            "향료",
+            "특정성분",
+            "20가지 유해성분"
+          ],
+          "score": 0
+        },
+        {
+          "field": "dermatologist_visit",
+          "in": [
+            "정기",
+            "간헐",
+            "없음"
+          ],
+          "score": 0
+        },
+        {
+          "field": "category_focus",
+          "in": [
+            "스킨케어",
+            "메이크업",
+            "클렌징",
+            "바디",
+            "헤어"
+          ],
+          "score": 0
+        },
+        {
+          "field": "key_step",
+          "in": [
+            "클렌징",
+            "토너",
+            "세럼",
+            "크림",
+            "선케어"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_preference",
+          "in": [
+            "젤",
+            "크림"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ingredient_avoid",
+          "exists": true,
+          "score": 0
+        },
+        {
+          "field": "texture_preference",
+          "in": [
+            "산뜻",
+            "촉촉",
+            "쫀쫀"
+          ],
+          "score": 0
+        },
+        {
+          "field": "scent_preference",
+          "in": [
+            "무향",
+            "은은",
+            "강함"
+          ],
+          "score": 0
+        },
+        {
+          "field": "value_orientation",
+          "in": [
+            "성분중심",
+            "브랜드중심",
+            "가성비"
+          ],
+          "score": 0
+        },
+        {
+          "field": "luxury_orientation",
+          "in": [
+            "Premium",
+            "Mass"
+          ],
+          "score": 0
+        },
+        {
+          "field": "trend_sensitivity",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "risk_attitude",
+          "in": [
+            "보수",
+            "중립",
+            "실험적"
+          ],
+          "score": 0
+        },
+        {
+          "field": "ethical_value",
+          "in": [
+            "비건",
+            "크루얼티프리",
+            "무관"
+          ],
+          "score": 0
+        },
+        {
+          "field": "sustainability",
+          "in": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "score": 0
+        },
+        {
+          "field": "avg_items_per_order",
+          "in": [
+            "1",
+            "2",
+            "3+"
+          ],
+          "score": 0
+        },
+        {
+          "field": "aov_level",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "annual_revenue",
+          "in": [
+            "싼 것을 자주 사는 사람",
+            "비싼 것을 가끔 사는 사람"
+          ],
+          "score": 0
+        },
+        {
+          "field": "review_dependency",
+          "in": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "score": 0
+        },
+        {
+          "field": "info_search_type",
+          "in": [
+            "분석형",
+            "추천의존형"
+          ],
+          "score": 0
+        },
+        {
+          "field": "lifecycle_stage",
+          "in": [
+            "Welcome",
+            "Active",
+            "VIP",
+            "Dormant"
+          ],
+          "score": 0
+        },
+        {
+          "field": "customer_tier",
+          "in": [
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "score": 0
+        },
+        {
+          "field": "nps_intent",
+          "in": [
+            "Yes",
+            "No"
+          ],
+          "score": 0
+        }
+      ]
+    }
+  },
+  "tie_breakers": [
+    {
+      "order": 1,
+      "rule": "If top1-top2 <= 2, prioritize Special Context first",
+      "priority_personas": [
+        "P-09",
+        "P-07",
+        "P-06"
+      ]
+    },
+    {
+      "order": 2,
+      "rule": "Then prioritize by value_orientation mapping",
+      "mapping": {
+        "성분중심": [
+          "P-01",
+          "P-02"
+        ],
+        "브랜드중심": [
+          "P-07",
+          "P-06",
+          "P-08"
+        ],
+        "가성비": [
+          "P-05",
+          "P-04"
+        ]
+      }
+    },
+    {
+      "order": 3,
+      "rule": "Then prioritize by behavioral certainty",
+      "behavior_priority": [
+        {
+          "if": {
+            "field": "last_message_response",
+            "equals": "Click"
+          },
+          "prefer": [
+            "P-05",
+            "P-06",
+            "P-02"
+          ]
+        },
+        {
+          "if": {
+            "field": "last_message_response",
+            "equals": "Open"
+          },
+          "prefer": [
+            "P-01",
+            "P-07",
+            "P-08"
+          ]
+        },
+        {
+          "if": {
+            "field": "last_message_response",
+            "equals": "Ignore"
+          },
+          "prefer": [
+            "P-04",
+            "P-05"
+          ]
+        }
+      ]
+    }
+  ],
+  "crm_routing_optimizer": {
+    "channel_rule": [
+      {
+        "if": {
+          "field": "last_message_channel",
+          "in": [
+            "앱푸시",
+            "알림톡",
+            "이메일",
+            "문자"
+          ]
+        },
+        "use_same_channel_weight": 2
+      },
+      {
+        "if": {
+          "field": "last_message_response",
+          "equals": "Ignore"
+        },
+        "fallback_channel_priority": [
+          "이메일",
+          "앱푸시",
+          "알림톡",
+          "문자"
+        ]
+      }
+    ],
+    "time_rule": [
+      {
+        "if": {
+          "field": "preferred_time",
+          "in": [
+            "08-09",
+            "12-13",
+            "19-21",
+            "22-24"
+          ]
+        },
+        "use_preferred_time": true
+      }
+    ],
+    "content_rule_by_persona": {
+      "P-01": [
+        "리얼리뷰",
+        "성분/데이터 기반 콘텐츠"
+      ],
+      "P-02": [
+        "리얼리뷰",
+        "트러블 솔루션/전후 비교 콘텐츠"
+      ],
+      "P-03": [
+        "브랜드 철학/지속가능 메시지"
+      ],
+      "P-04": [
+        "루틴 단순화/원클릭 리필 제안"
+      ],
+      "P-05": [
+        "프로모션 알림",
+        "재입고알림"
+      ],
+      "P-06": [
+        "신상알림",
+        "재입고알림"
+      ],
+      "P-07": [
+        "프리미엄 라인/샘플링/컨시어지 메시지"
+      ],
+      "P-08": [
+        "무드/감성 이미지 기반 콘텐츠"
+      ],
+      "P-09": [
+        "선물/포장/실패 없는 추천 콘텐츠"
+      ]
+    }
+  },
+  "output_schema": {
+    "fields": [
+      "persona_id",
+      "persona_name_ko",
+      "confidence",
+      "scores_by_persona",
+      "top_signals",
+      "recommended_channel",
+      "recommended_time",
+      "recommended_content_types"
+    ],
+    "confidence_logic": {
+      "high": "top1_score - top2_score >= 4",
+      "medium": "top1_score - top2_score in [2,3]",
+      "low": "top1_score - top2_score <= 1"
+    }
+  }
+}

@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Amoremall Personalized Message Agent (RAG)</title>
+  <style>
+    :root {
+      /* Light, Amorepacific-inspired blue theme */
+      --bg: #f6f9ff;
+      --panel: #ffffff;
+      --panel2: #f0f6ff;
+      --muted: #5f6b7a;
+      --text: #0b1220;
+      --accent: #1f6fff;        /* primary blue */
+      --accent2: #4aa3ff;       /* secondary blue */
+      --accentSoft: rgba(31,111,255,.12);
+      --border: rgba(16, 36, 64, .12);
+      --shadow: 0 12px 30px rgba(16, 36, 64, .10);
+      --danger: #d92d20;
+      --ok: #12b76a;
+    }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      background: linear-gradient(180deg, #f6f9ff 0%, #ffffff 65%, #f3f8ff 100%);
+      color:var(--text);
+    }
+    header{
+      padding:18px 20px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(10px);
+    }
+    header h1{
+      font-size:16px;
+      margin:0 0 6px;
+      font-weight:800;
+      letter-spacing:-0.2px;
+      color: var(--text);
+    }
+    header p{ margin:0; color:var(--muted); font-size:12px; }
+    .wrap{ display:grid; grid-template-columns: 420px 1fr; gap:14px; padding:14px; }
+    @media (max-width: 980px){ .wrap{ grid-template-columns:1fr; } }
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: var(--shadow);
+    }
+    .card h2{ margin:0 0 10px; font-size:13px; color: var(--text); }
+    label{ display:block; font-size:12px; color:var(--muted); margin:10px 0 6px; }
+    input, select, textarea{
+      width:100%;
+      box-sizing:border-box;
+      background: var(--panel2);
+      color: var(--text);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 10px;
+      font-size:13px;
+      outline:none;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(31,111,255,.55);
+      box-shadow: 0 0 0 4px rgba(31,111,255,.12);
+      background: #ffffff;
+    }
+    textarea{ min-height:90px; resize:vertical; }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .btns{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+    button{
+      background: linear-gradient(90deg, rgba(31,111,255,.95), rgba(74,163,255,.92));
+      border:1px solid rgba(31,111,255,.35);
+      color:#ffffff;
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:13px;
+      box-shadow: 0 10px 18px rgba(31,111,255,.18);
+      transition: transform .06s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+    button:hover{ box-shadow: 0 12px 22px rgba(31,111,255,.22); }
+    button:active{ transform: translateY(1px); }
+    button.secondary{
+      background: #ffffff;
+      border:1px solid var(--border);
+      color: var(--text);
+      font-weight:700;
+      box-shadow: none;
+    }
+    button.secondary:hover{
+      border-color: rgba(31,111,255,.35);
+      box-shadow: 0 10px 18px rgba(16,36,64,.08);
+    }
+    button:disabled{ opacity:.45; cursor:not-allowed; }
+    .hint{ font-size:12px; color:var(--muted); line-height:1.45; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: var(--accentSoft);
+      color: var(--muted);
+      font-size:12px;
+    }
+    .pill b{ color:var(--text); }
+    .out{ display:grid; gap:12px; }
+    .result{
+      background: #ffffff;
+      border:1px solid rgba(31,111,255,.25);
+      border-radius:16px;
+      padding:12px;
+    }
+    .result h3{ margin:0 0 8px; font-size:13px; }
+    .kv{ display:grid; grid-template-columns: 92px 1fr; gap:8px 10px; align-items:start; }
+    .kv div{ font-size:12px; color:var(--muted); }
+    .kv pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-size:13px; color:var(--text); }
+    .log{
+      background:#ffffff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+    }
+    .log pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-size:12px; color: #22324a; }
+    .status{ margin-top:8px; font-size:12px; }
+    .status.ok{ color: var(--ok); }
+    .status.bad{ color: var(--danger); }
+    .small{ font-size:11px; }
+    .grid3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+    @media (max-width: 980px){ .grid3{ grid-template-columns:1fr; } }
+
+    fieldset.box{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      margin:12px 0 0;
+      background: linear-gradient(180deg, rgba(31,111,255,.06), rgba(255,255,255,1));
+    }
+    fieldset.box legend{ font-size:12px; color: var(--muted); padding:0 6px; }
+    .price-row{ display:flex; gap:12px; align-items:center; margin-top:8px; }
+    .price-row input[type="range"]{ flex:1; }
+    .price-note{ margin-top:6px; font-size:11px; color: var(--muted); }
+
+    /* Dual-handle range UI (two inputs over one track) */
+    .range-wrap{
+      position: relative;
+      width: 100%;
+      height: 34px;
+      display:flex;
+      align-items:center;
+    }
+    .range-track{
+      position:absolute;
+      left:0;
+      right:0;
+      height:6px;
+      border-radius:999px;
+      background: rgba(16, 36, 64, .12);
+    }
+    .range-fill{
+      position:absolute;
+      height:6px;
+      border-radius:999px;
+      background: linear-gradient(90deg, rgba(31,111,255,.95), rgba(74,163,255,.92));
+      left:0;
+      width:0;
+    }
+
+    .range-wrap input[type="range"]{
+      position:absolute;
+      left:0;
+      right:0;
+      width:100%;
+      margin:0;
+      background: transparent;
+      pointer-events: none; /* thumb만 클릭되게 */
+      -webkit-appearance:none;
+      appearance:none;
+      height:34px;
+    }
+    .range-wrap input[type="range"]::-webkit-slider-runnable-track{
+      height:6px;
+      background: transparent;
+      border:none;
+    }
+    .range-wrap input[type="range"]::-moz-range-track{
+      height:6px;
+      background: transparent;
+      border:none;
+    }
+    .range-wrap input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:#ffffff;
+      border: 2px solid rgba(31,111,255,.75);
+      box-shadow: 0 6px 14px rgba(16,36,64,.18);
+      pointer-events: auto;
+      cursor: pointer;
+      margin-top: -6px; /* 6px track 중앙 정렬 */
+    }
+    .range-wrap input[type="range"]::-moz-range-thumb{
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:#ffffff;
+      border: 2px solid rgba(31,111,255,.75);
+      box-shadow: 0 6px 14px rgba(16,36,64,.18);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* 두 thumb가 겹칠 때 max를 위로 */
+    #priceMaxSlider{ z-index: 3; }
+    #priceMinSlider{ z-index: 2; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>아모레몰 개인화 마케팅 메시지 Agent · RAG 버전</h1>
+    <p>페르소나 JSON + 아모레몰 SQLite 상품DB를 벡터화(FAISS)하여 RAG로 상품·근거를 구성하고, OpenAI 모델로 제목(≤40자)·본문(≤350자) 생성</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>1) API 설정</h2>
+      <label for="apiKey">OpenAI API Key (선택)</label>
+      <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+      <p class="hint small">권장: 서버 환경변수(OPENAI_API_KEY)로 키를 보관. 이 입력칸은 데모/테스트용이며 서버에만 전달됩니다.</p>
+
+      <h2 style="margin-top:16px;">2) 입력(고객·캠페인)</h2>
+
+      <div class="row">
+        <div>
+          <label for="persona">고객 페르소나</label>
+          <select id="persona"></select>
+        </div>
+        <div>
+          <label for="objective">발신 목적</label>
+          <select id="objective">
+            <option value="acquisition">획득(첫구매)</option>
+            <option value="repurchase">재구매</option>
+            <option value="upsell">업셀</option>
+            <option value="cross_sell">교차판매</option>
+            <option value="winback">윈백(휴면/이탈)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div>
+          <label for="channel">채널</label>
+          <select id="channel">
+            <option value="push">푸시</option>
+            <option value="kakao">카카오 알림톡</option>
+            <option value="sms">SMS</option>
+            <option value="email">이메일</option>
+          </select>
+        </div>
+        <div>
+          <label for="brand">브랜드(선호/캠페인)</label>
+          <select id="brand"></select>
+        </div>
+        <div>
+          <label for="categoryLarge">카테고리 (대)</label>
+          <select id="categoryLarge"></select>
+
+          <label for="categoryMiddle">카테고리 (중)</label>
+          <select id="categoryMiddle" disabled></select>
+
+          <label for="categorySmall">카테고리 (소)</label>
+          <select id="categorySmall" disabled></select>
+        </div>
+      </div>
+      <div class="row">
+  <div>
+    <label for="modelSelect">LLM 모델</label>
+    <select id="modelSelect">
+      <option value="gpt-5.2">GPT-5.2</option>
+      <option value="gpt-5-mini">GPT-5 mini</option>
+      <option value="gpt-5-nano">GPT-5 nano</option>
+      <option value="gpt-4.1">GPT-4.1</option>
+    </select>
+  </div>
+  <div>
+    <label for="language">언어</label>
+    <select id="language"></select>
+  </div>
+</div>
+
+      <label for="concerns">고민/니즈(쉼표로 구분)</label>
+      <input id="concerns" placeholder="예: 민감, 건조, 장벽, 진정" />
+
+      <div class="row">
+        <div>
+          <label for="price">가격 민감도</label>
+          <select id="price">
+            <option value="low">낮음(프리미엄 허용)</option>
+            <option value="med" selected>보통</option>
+            <option value="high">높음(가성비/혜택 중시)</option>
+          </select>
+        </div>
+        <div>
+          <label for="style">문체 강도</label>
+          <select id="style">
+            <option value="soft" selected>부드럽게</option>
+            <option value="crisp">간결하게</option>
+            <option value="emotive">감성적으로</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="box">
+        <legend>가격대 (선택)</legend>
+
+        <label style="margin-top:0;">
+          <input type="checkbox" id="usePriceFilter" />
+          가격대 설정 사용
+        </label>
+
+        <div class="price-row">
+          <label for="priceMinInput" style="margin:0;">최저가
+            <input type="number" id="priceMinInput" placeholder="예: 20000" disabled />
+          </label>
+
+          <label for="priceMaxInput" style="margin:0;">최고가
+            <input type="number" id="priceMaxInput" placeholder="예: 80000" disabled />
+          </label>
+        </div>
+
+        <div class="price-row">
+          <div class="range-wrap">
+            <div class="range-track"></div>
+            <div class="range-fill" id="priceRangeFill"></div>
+
+            <input type="range" id="priceMinSlider" step="1000" disabled />
+            <input type="range" id="priceMaxSlider" step="1000" disabled />
+          </div>
+        </div>
+
+        <div class="price-note">체크를 켜면 선택한 가격 범위 내 상품만 추천해요. (미체크 시 가격은 고려하지 않음)</div>
+      </fieldset>
+
+      <label for="notes">추가 선호/상황(옵션)</label>
+      <textarea id="notes" placeholder="예: 향은 무향 선호, 끈적임 싫음, 출근 전 2분 루틴 원함"></textarea>
+
+      <div class="btns">
+        <button id="runBtn">메시지 생성</button>
+        <button id="resetBtn" class="secondary">입력 초기화</button>
+        <button id="seedBtn" class="secondary">샘플 입력 채우기</button>
+      </div>
+
+      <div id="status" class="status"></div>
+      <p class="hint small" id="serverInfo"></p>
+    </section>
+
+    <section class="card out">
+      <h2>3) 결과</h2>
+
+      <div class="result">
+        <h3>최종 메시지</h3>
+        <div class="kv">
+          <div>제목</div>
+          <pre id="outTitle">-</pre>
+          <div>본문</div>
+          <pre id="outBody">-</pre>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <span class="pill"><b id="lenTitle">제목 0</b> / 40자</span>
+          <span class="pill"><b id="lenBody">본문 0</b> / 350자</span>
+          <span class="pill">추천 수: <b id="pickedCount">0</b></span>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="log">
+          <h3 style="margin:0 0 8px; font-size:13px;">선정 상품(내부)</h3>
+          <pre id="picked" class="mono">-</pre>
+        </div>
+        <div class="log">
+          <h3 style="margin:0 0 8px; font-size:13px;">RAG 근거(요약)</h3>
+          <pre id="rag" class="mono">-</pre>
+        </div>
+        <div class="log">
+          <h3 style="margin:0 0 8px; font-size:13px;">디버그 로그</h3>
+          <pre id="debug" class="mono">-</pre>
+        </div>
+      </div>
+
+      <p class="hint">이 버전은 브라우저 단일 호출이 아니라, 서버에서 **LangChain + FAISS**로 벡터 검색(RAG)을 수행합니다. (실서비스에서는 리뷰/UGC/프로모션/재고/CRM 이벤트까지 문서화하여 동일한 파이프라인으로 확장하세요.)</p>
+    </section>
+  </main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let categoryTree = [];
+
+  function normalizeTokens(str){
+    return (str || "")
+      .split(/[,\n]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function setStatus(msg, ok=true){
+    const el = $("status");
+    el.textContent = msg || "";
+    el.className = "status " + (ok ? "ok" : "bad");
+  }
+
+  function updateLens(){
+    const t = $("outTitle").textContent || "";
+    const b = $("outBody").textContent || "";
+    $("lenTitle").textContent = "제목 " + t.length;
+    $("lenBody").textContent = "본문 " + b.length;
+  }
+
+  function prettyPicked(list){
+    if (!list || !list.length) return "-";
+    return list.map((p, i) => {
+      const price = p.price_discounted ? `${p.price_discounted.toLocaleString()}원` : "-";
+      const dr = (p.discount_rate != null) ? `${Math.round(p.discount_rate)}%` : "-";
+      return `${i+1}. [${p.brandName}] ${p.name}\n   · 카테고리: ${p.categoryTitle || "-"}\n   · 가격: ${price} (할인 ${dr})\n   · URL: ${p.url || "-"}`;
+    }).join("\n\n");
+  }
+
+  function applyPriceRangeFromMeta(data){
+    const pr = (data && data.price_range_discounted) ? data.price_range_discounted : null;
+    const dbMin = (pr && typeof pr.min === "number") ? pr.min : 0;
+    const dbMax = (pr && typeof pr.max === "number") ? pr.max : 200000;
+
+    const minS = $("priceMinSlider");
+    const maxS = $("priceMaxSlider");
+    const minI = $("priceMinInput");
+    const maxI = $("priceMaxInput");
+    if (!minS || !maxS || !minI || !maxI) return;
+
+    // bounds = DB min/max (요구사항)
+    minS.min = String(dbMin); minS.max = String(dbMax);
+    maxS.min = String(dbMin); maxS.max = String(dbMax);
+    minI.min = String(dbMin); minI.max = String(dbMax);
+    maxI.min = String(dbMin); maxI.max = String(dbMax);
+
+    // UX 기본 선택값: 전체 범위
+    minS.value = String(dbMin);
+    maxS.value = String(dbMax);
+    minI.value = String(dbMin);
+    maxI.value = String(dbMax);
+    updatePriceFill();
+  }
+
+  async function loadMeta(){
+    const res = await fetch("/api/meta");
+    if (!res.ok) throw new Error("meta fetch failed: " + res.status);
+    const data = await res.json();
+
+    // personas
+    const pSel = $("persona");
+    pSel.innerHTML = "";
+    for (const p of data.personas){
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = `${p.id} · ${p.name_ko} (${p.name_en})`;
+      pSel.appendChild(opt);
+    }
+
+    // brands
+    const bSel = $("brand");
+    bSel.innerHTML = "";
+    const anyOpt = document.createElement("option");
+    anyOpt.value = "ANY";
+    anyOpt.textContent = "전체(브랜드 무관)";
+    bSel.appendChild(anyOpt);
+
+    for (const b of data.brands){
+      const opt = document.createElement("option");
+      opt.value = b;
+      opt.textContent = b;
+      bSel.appendChild(opt);
+    }
+
+    categoryTree = Array.isArray(data.category_tree) ? data.category_tree : [];
+    const catLarge = $("categoryLarge");
+    const catMiddle = $("categoryMiddle");
+    const catSmall = $("categorySmall");
+    if (catLarge){
+      const options = categoryTree.map(x => `<option value="${x.large}">${x.large}</option>`).join("");
+      catLarge.innerHTML = `<option value="ANY">전체</option>` + options;
+      catLarge.value = "ANY";
+    }
+    if (catMiddle){
+      catMiddle.innerHTML = `<option value="ANY">전체</option>`;
+      catMiddle.value = "ANY";
+      catMiddle.disabled = true;
+    }
+    if (catSmall){
+      catSmall.innerHTML = `<option value="ANY">전체</option>`;
+      catSmall.value = "ANY";
+      catSmall.disabled = true;
+    }
+
+    // models (optional)
+    const mSel = $("modelSelect");
+    if (mSel && data.models && Array.isArray(data.models)){
+      mSel.innerHTML = "";
+      for (const m of data.models){
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        mSel.appendChild(opt);
+      }
+    }
+
+    // languages
+    const lSel = $("language");
+    if (lSel && data.languages && Array.isArray(data.languages)){
+      lSel.innerHTML = "";
+      for (const l of data.languages){
+        const opt = document.createElement("option");
+        opt.value = l.code;
+        opt.textContent = `${l.label} (${l.code})`;
+        lSel.appendChild(opt);
+      }
+      lSel.value = "ko";
+    }
+
+    $("serverInfo").textContent = data.server_hint || "";
+    applyPriceRangeFromMeta(data);
+  }
+
+  function handleLargeChange(){
+    const catLarge = $("categoryLarge");
+    const catMiddle = $("categoryMiddle");
+    const catSmall = $("categorySmall");
+    if (!catLarge || !catMiddle || !catSmall) return;
+
+    catMiddle.innerHTML = `<option value="ANY">전체</option>`;
+    catMiddle.value = "ANY";
+    catSmall.innerHTML = `<option value="ANY">전체</option>`;
+    catSmall.value = "ANY";
+    catSmall.disabled = true;
+
+    const selected = catLarge.value;
+    if (!selected || selected === "ANY"){
+      catMiddle.disabled = true;
+      return;
+    }
+
+    const node = categoryTree.find(x => x.large === selected);
+    if (!node || !Array.isArray(node.middles) || node.middles.length === 0){
+      catMiddle.disabled = true;
+      return;
+    }
+
+    node.middles.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.middle;
+      opt.textContent = m.middle;
+      catMiddle.appendChild(opt);
+    });
+    catMiddle.disabled = false;
+  }
+
+  function handleMiddleChange(){
+    const catLarge = $("categoryLarge");
+    const catMiddle = $("categoryMiddle");
+    const catSmall = $("categorySmall");
+    if (!catLarge || !catMiddle || !catSmall) return;
+
+    catSmall.innerHTML = `<option value="ANY">전체</option>`;
+    catSmall.value = "ANY";
+    if (!catMiddle.value || catMiddle.value === "ANY"){
+      catSmall.disabled = true;
+      return;
+    }
+
+    const node = categoryTree.find(x => x.large === catLarge.value);
+    if (!node || !Array.isArray(node.middles)){
+      catSmall.disabled = true;
+      return;
+    }
+
+    const midNode = node.middles.find(m => m.middle === catMiddle.value);
+    if (!midNode || !Array.isArray(midNode.smalls) || midNode.smalls.length === 0){
+      catSmall.disabled = true;
+      return;
+    }
+
+    midNode.smalls.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      catSmall.appendChild(opt);
+    });
+    catSmall.disabled = false;
+  }
+
+  function seed(){
+    $("concerns").value = "민감, 건조, 장벽, 진정";
+    $("notes").value = "무향 선호, 끈적임 싫음, 출근 전 2분 루틴";
+    $("objective").value = "acquisition";
+    $("channel").value = "push";
+    $("price").value = "med";
+    $("style").value = "soft";
+    setStatus("샘플 입력을 채웠어.", true);
+  }
+
+  function reset(){
+    $("concerns").value = "";
+    $("notes").value = "";
+    $("objective").value = "acquisition";
+    $("channel").value = "push";
+    $("brand").value = "ANY";
+    if ($("categoryLarge")) {
+      $("categoryLarge").value = "ANY";
+      handleLargeChange();
+    }
+    $("price").value = "med";
+    $("style").value = "soft";
+    if ($("usePriceFilter")) $("usePriceFilter").checked = false;
+
+    if ($("priceMinInput")) { $("priceMinInput").disabled = true; $("priceMinInput").value = $("priceMinSlider")?.min || ""; }
+    if ($("priceMaxInput")) { $("priceMaxInput").disabled = true; $("priceMaxInput").value = $("priceMaxSlider")?.max || ""; }
+
+    if ($("priceMinSlider")) { $("priceMinSlider").disabled = true; $("priceMinSlider").value = $("priceMinSlider").min || ""; }
+    if ($("priceMaxSlider")) { $("priceMaxSlider").disabled = true; $("priceMaxSlider").value = $("priceMaxSlider").max || ""; }
+
+    $("outTitle").textContent = "-";
+    $("outBody").textContent = "-";
+    $("picked").textContent = "-";
+    $("rag").textContent = "-";
+    $("debug").textContent = "-";
+    $("pickedCount").textContent = "0";
+    updateLens();
+    setStatus("입력을 초기화했어.", true);
+  }
+
+  async function run(){
+    const payload = {
+      apiKey: $("apiKey").value || null,
+      model: $("modelSelect") ? ($("modelSelect").value || null) : null,
+      language: $("language") ? $("language").value : "ko",
+      persona_id: $("persona").value,
+      objective: $("objective").value,
+      channel: $("channel").value,
+      brand: $("brand").value,
+      category_large: $("categoryLarge") ? $("categoryLarge").value : "ANY",
+      category_middle: $("categoryMiddle") ? $("categoryMiddle").value : "ANY",
+      category_small: $("categorySmall") ? $("categorySmall").value : "ANY",
+      concerns: normalizeTokens($("concerns").value),
+      price_sensitivity: $("price").value,
+      style: $("style").value,
+      notes: $("notes").value || "",
+      use_price_filter: $("usePriceFilter") ? $("usePriceFilter").checked : false,
+      price_min: ($("usePriceFilter") && $("usePriceFilter").checked && $("priceMinInput") && $("priceMinInput").value) ? Number($("priceMinInput").value) : null,
+      price_max: ($("usePriceFilter") && $("usePriceFilter").checked && $("priceMaxInput") && $("priceMaxInput").value) ? Number($("priceMaxInput").value) : null
+    };
+
+    $("runBtn").disabled = true;
+    setStatus("생성 중… (RAG 검색 → LLM 생성)", true);
+
+    try{
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok){
+        const txt = await res.text().catch(()=>"(no body)");
+        throw new Error(`API error ${res.status}: ${txt}`);
+      }
+      const out = await res.json();
+
+      $("outTitle").textContent = out.title || "-";
+      $("outBody").textContent = out.body || "-";
+      $("picked").textContent = prettyPicked(out.pickedProducts || []);
+      $("rag").textContent = out.ragSummary || "-";
+      $("debug").textContent = out.debugLog || "-";
+      $("pickedCount").textContent = String((out.pickedProducts || []).length);
+      updateLens();
+      setStatus("완료.", true);
+    } catch(e){
+      setStatus(e.message || String(e), false);
+    } finally {
+      $("runBtn").disabled = false;
+    }
+  }
+
+  $("runBtn").addEventListener("click", run);
+  $("resetBtn").addEventListener("click", reset);
+  $("seedBtn").addEventListener("click", seed);
+  if ($("categoryLarge")) $("categoryLarge").addEventListener("change", handleLargeChange);
+  if ($("categoryMiddle")) $("categoryMiddle").addEventListener("change", handleMiddleChange);
+
+  // --- Price filter wiring (optional) ---
+  const usePF = $("usePriceFilter");
+  const minI = $("priceMinInput");
+  const maxI = $("priceMaxInput");
+  const minS = $("priceMinSlider");
+  const maxS = $("priceMaxSlider");
+
+  function updatePriceFill(){
+    const fill = $("priceRangeFill");
+    if (!fill || !minS || !maxS) return;
+
+    const min = parseInt(minS.min || "0", 10);
+    const max = parseInt(minS.max || "200000", 10);
+
+    const a = parseInt(minS.value || String(min), 10);
+    const b = parseInt(maxS.value || String(max), 10);
+
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+
+    const pct = (v) => {
+      if (max <= min) return 0;
+      return ((v - min) / (max - min)) * 100;
+    };
+
+    const left = pct(lo);
+    const right = pct(hi);
+    fill.style.left = left + "%";
+    fill.style.width = (right - left) + "%";
+  }
+
+  function setEnabled(on){
+    if (!minI || !maxI || !minS || !maxS) return;
+    [minI, maxI, minS, maxS].forEach(el => el.disabled = !on);
+  }
+
+  function syncFromSliders(){
+    if (!minI || !maxI || !minS || !maxS) return;
+    if (parseInt(minS.value||"0",10) > parseInt(maxS.value||"0",10)) {
+      maxS.value = minS.value;
+    }
+    minI.value = minS.value;
+    maxI.value = maxS.value;
+    updatePriceFill();
+  }
+
+  function syncFromInputs(){
+    if (!minI || !maxI || !minS || !maxS) return;
+    if (minI.value) minS.value = minI.value;
+    if (maxI.value) maxS.value = maxI.value;
+    if (parseInt(minS.value||"0",10) > parseInt(maxS.value||"0",10)) {
+      maxS.value = minS.value;
+    }
+    minI.value = minS.value;
+    maxI.value = maxS.value;
+    updatePriceFill();
+  }
+
+  if (usePF){
+    usePF.addEventListener("change", () => {
+      setEnabled(usePF.checked);
+      if (usePF.checked) syncFromInputs();
+    });
+  }
+  if (minS) minS.addEventListener("input", syncFromSliders);
+  if (maxS) maxS.addEventListener("input", syncFromSliders);
+  if (minI) minI.addEventListener("input", syncFromInputs);
+  if (maxI) maxI.addEventListener("input", syncFromInputs);
+
+  // default: off
+  setEnabled(false);
+  updatePriceFill();
+
+  loadMeta().catch(e => {
+    setStatus("서버에 연결할 수 없어. app.py를 실행했는지 확인해줘. (" + e.message + ")", false);
+  });
+
+  updateLens();
+</script>
+</body>
+</html>
